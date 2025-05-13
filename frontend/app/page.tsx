@@ -17,7 +17,7 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState<{role: string, content: string}[]>([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/")
+    fetch("https://aisite-advz.onrender.com/")
       .then((res) => res.text())
       .then((data) => setBackendMessage(data))
       .catch(() => setBackendMessage("Erreur de connexion au backend"));
@@ -28,7 +28,7 @@ export default function Home() {
     setLoading(true);
     setGeneratedText("");
     try {
-      const res = await fetch("http://127.0.0.1:5000/generate", {
+      const res = await fetch("https://aisite-advz.onrender.com/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
@@ -46,7 +46,7 @@ export default function Home() {
     setLoadingImage(true);
     setGeneratedImage("");
     try {
-      const res = await fetch("http://127.0.0.1:5000/generate-image", {
+      const res = await fetch("https://aisite-advz.onrender.com/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: imagePrompt }),
@@ -66,7 +66,7 @@ export default function Home() {
     setChatHistory((prev) => [...prev, userMessage]);
     setChatLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:5000/chat", {
+      const res = await fetch("https://aisite-advz.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: chatInput }),
@@ -237,7 +237,7 @@ export default function Home() {
                     Image générée&nbsp;:
                   </strong>
                   <img
-                    src={`http://127.0.0.1:5000${generatedImage}`}
+                    src={`https://aisite-advz.onrender.com${generatedImage}`}
                     alt="Générée par IA"
                     className="mt-2 max-w-full h-auto border rounded-xl shadow-lg"
                   />
