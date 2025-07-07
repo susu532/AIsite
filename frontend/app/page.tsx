@@ -1,10 +1,20 @@
 // NOTE: Requires 'framer-motion'. Install with: npm install framer-motion
 "use client";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
+type AuthStatus = "idle" | "logged_in" | "logged_out" | "error";
+
 export default function Home() {
+  // Auth state
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("idle");
+  const [authMessage, setAuthMessage] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showLogin, setShowLogin] = useState(false);
+
   const [backendMessage, setBackendMessage] = useState("");
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,18 +27,66 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState<{role: string, content: string}[]>([]);
 
   useEffect(() => {
-    fetch("https://aisite-advz.onrender.com/")
+    fetch("http://127.0.0.1:5000/")
       .then((res) => res.text())
       .then((data) => setBackendMessage(data))
       .catch(() => setBackendMessage("Erreur de connexion au backend"));
+    // Optionally, check session here
+    // setAuthStatus("logged_out");
   }, []);
+  // Auth handlers
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthMessage("");
+    try {
+      const res = await fetch("http://127.0.0.1:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAuthStatus("logged_in");
+        setAuthMessage("Connecté !");
+        setShowLogin(false);
+      } else {
+        setAuthStatus("error");
+        setAuthMessage(data.error || "Erreur de connexion");
+      }
+    } catch {
+      setAuthStatus("error");
+      setAuthMessage("Erreur de connexion au serveur");
+    }
+  };
+
+  const handleLogout = async () => {
+    setAuthMessage("");
+    try {
+      const res = await fetch("http://127.0.0.1:5000/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAuthStatus("logged_out");
+        setAuthMessage("Déconnecté.");
+      } else {
+        setAuthStatus("error");
+        setAuthMessage(data.error || "Erreur de déconnexion");
+      }
+    } catch {
+      setAuthStatus("error");
+      setAuthMessage("Erreur de connexion au serveur");
+    }
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setGeneratedText("");
     try {
-      const res = await fetch("https://aisite-advz.onrender.com/generate", {
+      const res = await fetch("http://127.0.0.1:5000/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
@@ -46,7 +104,7 @@ export default function Home() {
     setLoadingImage(true);
     setGeneratedImage("");
     try {
-      const res = await fetch("https://aisite-advz.onrender.com/generate-image", {
+      const res = await fetch("http://127.0.0.1:5000/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: imagePrompt }),
@@ -66,7 +124,7 @@ export default function Home() {
     setChatHistory((prev) => [...prev, userMessage]);
     setChatLoading(true);
     try {
-      const res = await fetch("https://aisite-advz.onrender.com/chat", {
+      const res = await fetch("http://127.0.0.1:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: chatInput }),
@@ -87,13 +145,58 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-400 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
       <main className="w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
+        {/* Auth UI */}
+        <div className="w-full flex flex-col items-end mb-4">
+          {authStatus === "logged_in" ? (
+            <div className="flex items-center gap-4">
+              <span className="text-green-700 font-semibold">Connecté</span>
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+              >
+                Déconnexion
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowLogin((v) => !v)}
+              className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
+            >
+              {showLogin ? "Fermer" : "Connexion"}
+            </button>
+          )}
+          {authMessage && (
+            <div className={`mt-2 text-sm ${authStatus === "error" ? "text-red-600" : "text-green-600"}`}>{authMessage}</div>
+          )}
+        </div>
+        {showLogin && authStatus !== "logged_in" && (
+          <form onSubmit={handleLogin} className="w-full max-w-xs bg-white/90 p-4 rounded-xl shadow flex flex-col gap-3 mb-6">
+            <label className="font-semibold">Nom d'utilisateur</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="border px-2 py-1 rounded"
+              required
+            />
+            <label className="font-semibold">Mot de passe</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border px-2 py-1 rounded"
+              required
+            />
+            <button type="submit" className="bg-purple-600 text-white rounded px-3 py-1 mt-2 hover:bg-purple-700 transition">Se connecter</button>
+          </form>
+        )}
         <motion.div
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, type: "spring" }}
           className="flex flex-col items-center gap-2"
         >
-         
+         {/* ...existing code... */}
           <h1 className="text-4xl sm:text-5xl font-extrabold text-white drop-shadow-lg bg-gradient-to-r from-white via-fuchsia-300 to-yellow-200 bg-clip-text text-transparent">
             StageAI Playground
           </h1>
@@ -237,7 +340,7 @@ export default function Home() {
                     Image générée&nbsp;:
                   </strong>
                   <img
-                    src={`https://aisite-advz.onrender.com${generatedImage}`}
+                    src={`http://127.0.0.1:5000${generatedImage}`}
                     alt="Générée par IA"
                     className="mt-2 max-w-full h-auto border rounded-xl shadow-lg"
                   />
