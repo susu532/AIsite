@@ -1,0 +1,13 @@
+@startuml
+actor Utilisateur
+participant "Frontend (Next.js)" as Frontend
+participant "Backend (Flask)" as Backend
+participant "MongoDB" as DB
+
+Utilisateur -> Frontend : Demande à consulter l'historique
+Frontend -> Backend : GET /history (avec session utilisateur)
+Backend -> DB : Recherche des historiques pour l'utilisateur
+DB --> Backend : Liste des historiques
+Backend --> Frontend : JSON (historique)
+Frontend --> Utilisateur : Affiche l'historique (textes/images générés)
+@enduml
