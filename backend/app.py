@@ -1,30 +1,51 @@
-from flask import Flask, request, jsonify, send_file
+
+from flask import Flask, request, jsonify, send_from_directory, session
 from flask_cors import CORS
 import openai
 from dotenv import load_dotenv
 import os
 import torch
 from diffusers import StableDiffusionPipeline
+from PIL import Image
 import uuid
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
+app.secret_key = os.getenv("SECRET_KEY", "dev")
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-# Load Stable Diffusion model once
-MODEL_ID = os.getenv('SD_MODEL_ID', 'runwayml/stable-diffusion-v1-5')
-pipe = StableDiffusionPipeline.from_pretrained(MODEL_ID, torch_dtype=torch.float32)
-pipe = pipe.to('cpu')
+# --- Stable Diffusion Setup ---
+MODEL_ID = os.getenv("SD_MODEL_ID", "runwayml/stable-diffusion-v1-5")
+sd_pipe = None
+def get_sd_pipe():
+    global sd_pipe
+    if sd_pipe is None:
+        sd_pipe = StableDiffusionPipeline.from_pretrained(MODEL_ID, torch_dtype=torch.float32)
+        sd_pipe = sd_pipe.to("cpu")
+    return sd_pipe
 
-# Directory to save generated images
-GENERATED_DIR = os.path.join(os.path.dirname(__file__), 'generated_images')
-os.makedirs(GENERATED_DIR, exist_ok=True)
+USERS = {"admin": "admin123", "test": "test123"}
 
 @app.route('/')
 def home():
     return "Hello, Flask backend is running!"
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+    if username in USERS and USERS[username] == password:
+        session['user'] = username
+        return jsonify({"success": True, "user": username})
+    return jsonify({"success": False}), 401
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user', None)
+    return jsonify({"success": True})
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -49,22 +70,17 @@ def generate_image():
     prompt = data.get('prompt', '')
     if not prompt:
         return jsonify({'error': 'Prompt requis'}), 400
-    try:
-        image = pipe(prompt).images[0]
-        filename = f"{uuid.uuid4().hex}.png"
-        filepath = os.path.join(GENERATED_DIR, filename)
-        image.save(filepath)
-        # Return a URL path (frontend should fetch from /image/<filename>)
-        return jsonify({'image_url': f"/image/{filename}"})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    pipe = get_sd_pipe()
+    image = pipe(prompt).images[0]
+    filename = f"{uuid.uuid4().hex}.png"
+    save_path = os.path.join("generated_images", filename)
+    os.makedirs("generated_images", exist_ok=True)
+    image.save(save_path)
+    return jsonify({'image_url': f"/image/{filename}"})
 
 @app.route('/image/<filename>')
 def serve_image(filename):
-    filepath = os.path.join(GENERATED_DIR, filename)
-    if not os.path.exists(filepath):
-        return jsonify({'error': 'Image not found'}), 404
-    return send_file(filepath, mimetype='image/png')
+    return send_from_directory("generated_images", filename)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
