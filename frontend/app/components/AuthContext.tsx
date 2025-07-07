@@ -12,15 +12,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<string | null>(null);
 
   const login = async (username: string, password: string) => {
-    // Simulate authentication (replace with real API call)
-    if (username === "admin" && password === "admin") {
-      setUser(username);
-      return true;
+    try {
+      const res = await fetch("http://127.0.0.1:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
+      });
+      if (res.ok) {
+        setUser(username);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
     }
-    return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await fetch("http://127.0.0.1:5000/logout", {
+      method: "POST",
+      credentials: "include",
+    });
     setUser(null);
   };
 
