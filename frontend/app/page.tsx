@@ -191,59 +191,8 @@ export default function Home() {
           </div>
         </motion.div>
 
-        <div className="flex flex-col md:flex-row gap-8 w-full">
-          {/* Text Generation Card */}
-          <motion.form
-            onSubmit={handleGenerate}
-            className="flex-1 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-white/30"
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-          >
-            <label htmlFor="prompt" className="font-semibold text-purple-700">
-              Prompt pour génération IA&nbsp;:
-            </label>
-            <input
-              id="prompt"
-              type="text"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="border-2 border-purple-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
-              placeholder="Décrivez le contenu à générer..."
-              required
-            />
-            <motion.button
-              type="submit"
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-lg px-6 py-2 mt-2 shadow-lg hover:scale-105 hover:from-pink-500 hover:to-purple-500 transition-all duration-200"
-              disabled={loading}
-              whileTap={{ scale: 0.95 }}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-                  Génération...
-                </span>
-              ) : (
-                "Générer le texte"
-              )}
-            </motion.button>
-            <AnimatePresence>
-              {generatedText && (
-                <motion.div
-                  className="mt-4 p-4 border rounded-xl bg-green-50 text-green-800 w-full"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <strong className="block mb-2 text-green-700">
-                    Texte généré&nbsp;:
-                  </strong>
-                  <span className="whitespace-pre-line">{generatedText}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.form>
+        <div className="flex flex-col gap-8 w-full">
+          
 
           {/* Image Generation Card */}
           <motion.form
@@ -302,6 +251,58 @@ export default function Home() {
                       style={{ maxHeight: '70vh', maxWidth: '100%' }}
                     />
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.form>
+          {/* Text Generation Card */}
+          <motion.form
+            onSubmit={handleGenerate}
+            className="flex-1 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-white/30"
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            <label htmlFor="prompt" className="font-semibold text-purple-700">
+              Prompt pour génération IA&nbsp;:
+            </label>
+            <input
+              id="prompt"
+              type="text"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="border-2 border-purple-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
+              placeholder="Décrivez le contenu à générer..."
+              required
+            />
+            <motion.button
+              type="submit"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-lg px-6 py-2 mt-2 shadow-lg hover:scale-105 hover:from-pink-500 hover:to-purple-500 transition-all duration-200"
+              disabled={loading}
+              whileTap={{ scale: 0.95 }}
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                  Génération...
+                </span>
+              ) : (
+                "Générer le texte"
+              )}
+            </motion.button>
+            <AnimatePresence>
+              {generatedText && (
+                <motion.div
+                  className="mt-4 p-4 border rounded-xl bg-green-50 text-green-800 w-full"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <strong className="block mb-2 text-green-700">
+                    Texte généré&nbsp;:
+                  </strong>
+                  <span className="whitespace-pre-line">{generatedText}</span>
                 </motion.div>
               )}
             </AnimatePresence>
