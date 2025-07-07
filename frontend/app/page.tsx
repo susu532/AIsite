@@ -248,7 +248,8 @@ export default function Home() {
           {/* Image Generation Card */}
           <motion.form
             onSubmit={handleGenerateImage}
-            className="flex-1 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-white/30"
+            className="flex-1 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-white/30 min-h-[60vh] justify-between"
+            style={{ minHeight: '60vh', height: '100%' }}
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -283,7 +284,8 @@ export default function Home() {
             <AnimatePresence>
               {generatedImage && (
                 <motion.div
-                  className="mt-4 p-4 border rounded-xl bg-purple-50 text-purple-800 w-full flex flex-col items-center"
+                  className="flex-1 flex flex-col items-center justify-center mt-4 p-2 border rounded-xl bg-purple-50 text-purple-800 w-full"
+                  style={{ minHeight: '40vh', height: '100%' }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
@@ -292,11 +294,14 @@ export default function Home() {
                   <strong className="block mb-2 text-purple-700">
                     Image générée&nbsp;:
                   </strong>
-                  <img
-                    src={`http://127.0.0.1:5000${generatedImage}`}
-                    alt="Générée par IA"
-                    className="mt-2 max-w-full h-auto border rounded-xl shadow-lg"
-                  />
+                  <div className="w-full h-full flex-1 flex items-center justify-center">
+                    <img
+                      src={`http://127.0.0.1:5000${generatedImage}`}
+                      alt="Générée par IA"
+                      className="w-full h-full object-contain border rounded-xl shadow-lg"
+                      style={{ maxHeight: '60vh', maxWidth: '100%' }}
+                    />
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
