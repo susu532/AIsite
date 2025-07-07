@@ -4,15 +4,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import LoginModal from "./components/LoginModal";
+import { useAuth } from "./components/AuthContext";
 
 type AuthStatus = "idle" | "logged_in" | "logged_out" | "error";
 
 export default function Home() {
-  // Auth state
-  const [authStatus, setAuthStatus] = useState<AuthStatus>("idle");
+  const { user, login, logout } = useAuth();
   const [authMessage, setAuthMessage] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [showLogin, setShowLogin] = useState(false);
 
   const [backendMessage, setBackendMessage] = useState("");
@@ -35,50 +34,20 @@ export default function Home() {
     // setAuthStatus("logged_out");
   }, []);
   // Auth handlers
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (username: string, password: string) => {
     setAuthMessage("");
-    try {
-      const res = await fetch("http://127.0.0.1:5000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setAuthStatus("logged_in");
-        setAuthMessage("Connecté !");
-        setShowLogin(false);
-      } else {
-        setAuthStatus("error");
-        setAuthMessage(data.error || "Erreur de connexion");
-      }
-    } catch {
-      setAuthStatus("error");
-      setAuthMessage("Erreur de connexion au serveur");
+    const success = await login(username, password);
+    if (success) {
+      setAuthMessage("Connecté !");
+      setShowLogin(false);
+    } else {
+      setAuthMessage("Nom d'utilisateur ou mot de passe incorrect.");
     }
   };
 
-  const handleLogout = async () => {
-    setAuthMessage("");
-    try {
-      const res = await fetch("http://127.0.0.1:5000/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setAuthStatus("logged_out");
-        setAuthMessage("Déconnecté.");
-      } else {
-        setAuthStatus("error");
-        setAuthMessage(data.error || "Erreur de déconnexion");
-      }
-    } catch {
-      setAuthStatus("error");
-      setAuthMessage("Erreur de connexion au serveur");
-    }
+  const handleLogout = () => {
+    logout();
+    setAuthMessage("Déconnecté.");
   };
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -147,9 +116,9 @@ export default function Home() {
       <main className="w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
         {/* Auth UI */}
         <div className="w-full flex flex-col items-end mb-4">
-          {authStatus === "logged_in" ? (
+          {user ? (
             <div className="flex items-center gap-4">
-              <span className="text-green-700 font-semibold">Connecté</span>
+              <span className="text-green-700 font-semibold">Connecté : {user}</span>
               <button
                 onClick={handleLogout}
                 className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
@@ -159,37 +128,21 @@ export default function Home() {
             </div>
           ) : (
             <button
-              onClick={() => setShowLogin((v) => !v)}
+              onClick={() => setShowLogin(true)}
               className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
             >
-              {showLogin ? "Fermer" : "Connexion"}
+              Connexion
             </button>
           )}
           {authMessage && (
-            <div className={`mt-2 text-sm ${authStatus === "error" ? "text-red-600" : "text-green-600"}`}>{authMessage}</div>
+            <div className={`mt-2 text-sm ${user ? "text-green-600" : "text-red-600"}`}>{authMessage}</div>
           )}
         </div>
-        {showLogin && authStatus !== "logged_in" && (
-          <form onSubmit={handleLogin} className="w-full max-w-xs bg-white/90 p-4 rounded-xl shadow flex flex-col gap-3 mb-6">
-            <label className="font-semibold">Nom d'utilisateur</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="border px-2 py-1 rounded"
-              required
-            />
-            <label className="font-semibold">Mot de passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="border px-2 py-1 rounded"
-              required
-            />
-            <button type="submit" className="bg-purple-600 text-white rounded px-3 py-1 mt-2 hover:bg-purple-700 transition">Se connecter</button>
-          </form>
-        )}
+        <LoginModal
+          isOpen={showLogin && !user}
+          onClose={() => setShowLogin(false)}
+          onLogin={handleLogin}
+        />
         <motion.div
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
