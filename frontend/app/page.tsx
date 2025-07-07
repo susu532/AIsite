@@ -248,8 +248,8 @@ export default function Home() {
           {/* Image Generation Card */}
           <motion.form
             onSubmit={handleGenerateImage}
-            className="flex-1 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-white/30 min-h-[60vh] justify-between"
-            style={{ minHeight: '60vh', height: '100%' }}
+            className="fixed inset-0 z-40 bg-black/90 flex flex-col gap-4 items-center justify-center"
+            style={{ minHeight: '100vh', minWidth: '100vw', padding: 0, margin: 0 }}
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -284,24 +284,26 @@ export default function Home() {
             <AnimatePresence>
               {generatedImage && (
                 <motion.div
-                  className="flex-1 flex flex-col items-center justify-center mt-4 p-2 border rounded-xl bg-purple-50 text-purple-800 w-full"
-                  style={{ minHeight: '40vh', height: '100%' }}
+                  className="absolute inset-0 flex items-center justify-center bg-black"
+                  style={{ minHeight: '100vh', minWidth: '100vw', zIndex: 50 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <strong className="block mb-2 text-purple-700">
-                    Image générée&nbsp;:
-                  </strong>
-                  <div className="w-full h-full flex-1 flex items-center justify-center">
-                    <img
-                      src={`http://127.0.0.1:5000${generatedImage}`}
-                      alt="Générée par IA"
-                      className="w-full h-full object-contain border rounded-xl shadow-lg"
-                      style={{ maxHeight: '60vh', maxWidth: '100%' }}
-                    />
-                  </div>
+                  <img
+                    src={`http://127.0.0.1:5000${generatedImage}`}
+                    alt="Générée par IA"
+                    className="w-full h-full object-contain"
+                    style={{ maxHeight: '100vh', maxWidth: '100vw' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setGeneratedImage("")}
+                    className="absolute top-6 right-8 z-60 bg-white/80 text-black rounded-full px-4 py-2 text-lg font-bold shadow-lg hover:bg-white"
+                  >
+                    Fermer
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
